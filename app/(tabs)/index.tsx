@@ -10,11 +10,19 @@ import { Avatar } from "@/components/Avatar";
 import { useTheme } from "@/theme/theme";
 import { palette } from "@/theme/tokens";
 import { doctors, appointments, statusLabel } from "@/lib/mock";
+import { useAuth } from "@/context/AuthContext";
+import { DoctorHome } from "@/components/DoctorHome";
 
 export default function Home() {
   const { colors, spacing, radius } = useTheme();
   const router = useRouter();
+  const { user } = useAuth();
   const next = appointments.find((a) => a.status === "SCHEDULED");
+
+  // 의료진은 진료 대기열 중심의 홈을 본다.
+  if (user?.role === "DOCTOR") {
+    return <DoctorHome />;
+  }
 
   return (
     <Screen>
