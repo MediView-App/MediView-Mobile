@@ -10,6 +10,8 @@ import { Avatar } from "@/components/Avatar";
 import { useTheme } from "@/theme/theme";
 import { palette } from "@/theme/tokens";
 import { doctors } from "@/lib/mock";
+import { DEMO_MODE } from "@/lib/config";
+import { getQueueStatus } from "@/api/appointments";
 
 export default function WaitingRoom() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -21,12 +23,28 @@ export default function WaitingRoom() {
   const [ahead, setAhead] = useState(2); // 내 앞 대기 인원
   const ready = ahead <= 0;
 
-  // 데모: 대기열이 줄어드는 것을 시뮬레이션. 실서버는 세션 상태를 구독한다.
+  // 데모: 대기열이 줄어드는 것을 시뮬레이션.
   useEffect(() => {
-    if (ready) return;
+    if (!DEMO_MODE || ready) return;
     const t = setInterval(() => setAhead((n) => Math.max(0, n - 1)), 4000);
     return () => clearInterval(t);
   }, [ready]);
+
+  // 실서버: 대기 순번을 주기적으로 폴링해 내 차례가 되면 입장 가능 상태로 전환.
+  useEffect(() => {
+    if (DEMO_MODE) return;
+    let alive = true;
+    const poll = async () => {
+      const s = await getQueueStatus(String(id));
+      if (alive && s) setAhead(Math.max(0, s.position));
+    };
+    poll();
+    const t = setInterval(poll, 5000);
+    return () => {
+      alive = false;
+      clearInterval(t);
+    };
+  }, [id]);
 
   return (
     <View

@@ -20,6 +20,23 @@ export type DoctorQueueItem = {
   queueOrder?: number;
 };
 
+export type QueueStatus = {
+  appointmentId: number;
+  status: AppointmentDto["status"];
+  /** 내 앞 대기 인원. 0 = 내 차례, -1 = 종료/취소. */
+  position: number;
+};
+
+/** 예약의 실시간 대기 순번. (데모는 null 반환 → 화면에서 시뮬레이션) */
+export async function getQueueStatus(appointmentId: string | number): Promise<QueueStatus | null> {
+  if (DEMO_MODE) return null;
+  try {
+    return await api<QueueStatus>(`/api/appointments/${appointmentId}/queue-status`);
+  } catch {
+    return null;
+  }
+}
+
 /** 담당 의료인의 진료 대기열(완료·취소 제외). */
 export async function getDoctorQueue(): Promise<DoctorQueueItem[]> {
   if (DEMO_MODE) {
