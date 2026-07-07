@@ -11,6 +11,31 @@ export type AppointmentView = {
   status: AppointmentDto["status"];
 };
 
+/** 의료진 진료 대기열 항목 */
+export type DoctorQueueItem = {
+  appointmentId: number;
+  patientName?: string;
+  status: AppointmentDto["status"];
+  scheduledAt?: string;
+  queueOrder?: number;
+};
+
+/** 담당 의료인의 진료 대기열(완료·취소 제외). */
+export async function getDoctorQueue(): Promise<DoctorQueueItem[]> {
+  if (DEMO_MODE) {
+    return [
+      { appointmentId: 1, patientName: "김*수", status: "WAITING", queueOrder: 1 },
+      { appointmentId: 2, patientName: "이*은", status: "WAITING", queueOrder: 2 },
+      { appointmentId: 3, patientName: "박*호", status: "WAITING", queueOrder: 3 },
+    ];
+  }
+  try {
+    return await api<DoctorQueueItem[]>("/api/appointments/doctor/queue");
+  } catch {
+    return [];
+  }
+}
+
 function toView(a: AppointmentDto): AppointmentView {
   return {
     id: String(a.id),

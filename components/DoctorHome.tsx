@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { View, Pressable, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -10,30 +11,25 @@ import { Button } from "@/components/Button";
 import { useTheme } from "@/theme/theme";
 import { palette } from "@/theme/tokens";
 import { useAuth } from "@/context/AuthContext";
-
-type QueueItem = {
-  id: string;
-  patient: string;
-  age: string;
-  gender: string;
-  reason: string;
-  waitedMin: number;
-  status: "WAITING" | "IN_PROGRESS";
-};
-
-// 데모용 진료 대기열. 실서버에서는 담당의의 오늘 예약/세션에서 조회한다.
-const QUEUE: QueueItem[] = [
-  { id: "1", patient: "김*수", age: "34세", gender: "남", reason: "인후통·기침 3일", waitedMin: 2, status: "WAITING" },
-  { id: "2", patient: "이*은", age: "28세", gender: "여", reason: "두드러기·가려움", waitedMin: 6, status: "WAITING" },
-  { id: "3", patient: "박*호", age: "51세", gender: "남", reason: "고혈압 약 재처방", waitedMin: 11, status: "WAITING" },
-];
+import { getDoctorQueue, type DoctorQueueItem } from "@/api/appointments";
 
 export function DoctorHome() {
   const { colors, spacing, radius } = useTheme();
   const router = useRouter();
   const { user } = useAuth();
+  const [queue, setQueue] = useState<DoctorQueueItem[]>([]);
 
-  const waiting = QUEUE.filter((q) => q.status === "WAITING").length;
+  useEffect(() => {
+    let alive = true;
+    getDoctorQueue()
+      .then((q) => alive && setQueue(q))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const waiting = queue.filter((q) => q.status === "WAITING").length;
 
   return (
     <Screen>
@@ -62,53 +58,61 @@ export function DoctorHome() {
         <Badge tone="warning" label={`${waiting}명 대기`} />
       </View>
 
-      <View style={{ gap: spacing.x3 }}>
-        {QUEUE.map((q, i) => (
-          <Card key={q.id} style={{ gap: spacing.x3 }}>
-            <View style={styles.rowBetween}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 12, flex: 1 }}>
-                <View style={{ position: "relative" }}>
-                  <Avatar name={q.patient} />
-                  <View
-                    style={[
-                      styles.order,
-                      { backgroundColor: colors.brand, borderColor: colors.surface },
-                    ]}
-                  >
-                    <Text variant="caption" style={{ color: "#fff", fontWeight: "800" }}>
-                      {i + 1}
-                    </Text>
+      {queue.length === 0 ? (
+        <Card style={{ alignItems: "center", paddingVertical: 32, gap: 8 }}>
+          <Ionicons name="cafe-outline" size={30} color={colors.subtle} />
+          <Text variant="body" color="muted">
+            대기 중인 환자가 없어요.
+          </Text>
+        </Card>
+      ) : (
+        <View style={{ gap: spacing.x3 }}>
+          {queue.map((q, i) => {
+            const name = q.patientName ?? "환자";
+            return (
+              <Card key={q.appointmentId} style={{ gap: spacing.x3 }}>
+                <View style={styles.rowBetween}>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 12, flex: 1 }}>
+                    <View style={{ position: "relative" }}>
+                      <Avatar name={name} />
+                      <View
+                        style={[
+                          styles.order,
+                          { backgroundColor: colors.brand, borderColor: colors.surface },
+                        ]}
+                      >
+                        <Text variant="caption" style={{ color: "#fff", fontWeight: "800" }}>
+                          {q.queueOrder ?? i + 1}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text variant="bodyStrong">{name}</Text>
+                      <Text variant="small" color="muted" numberOfLines={1}>
+                        {q.status === "IN_PROGRESS" ? "진료 중" : "진료 대기"}
+                      </Text>
+                    </View>
                   </View>
+                  <Ionicons name="chevron-forward" size={18} color={colors.subtle} />
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text variant="bodyStrong">
-                    {q.patient} · {q.gender}/{q.age}
-                  </Text>
-                  <Text variant="small" color="muted" numberOfLines={1}>
-                    {q.reason}
-                  </Text>
+                <View style={{ flexDirection: "row", gap: 8 }}>
+                  <Button
+                    label="진료 시작"
+                    style={{ flex: 1 }}
+                    onPress={() => router.push(`/consult/${q.appointmentId}`)}
+                  />
+                  <Button
+                    label="문서 발급"
+                    variant="secondary"
+                    style={{ flex: 1 }}
+                    onPress={() => router.push(`/prescribe/${q.appointmentId}`)}
+                  />
                 </View>
-              </View>
-              <Text variant="caption" color="subtle">
-                {q.waitedMin}분 대기
-              </Text>
-            </View>
-            <View style={{ flexDirection: "row", gap: 8 }}>
-              <Button
-                label="진료 시작"
-                style={{ flex: 1 }}
-                onPress={() => router.push(`/consult/${q.id}`)}
-              />
-              <Button
-                label="문서 발급"
-                variant="secondary"
-                style={{ flex: 1 }}
-                onPress={() => router.push(`/prescribe/${q.id}`)}
-              />
-            </View>
-          </Card>
-        ))}
-      </View>
+              </Card>
+            );
+          })}
+        </View>
+      )}
     </Screen>
   );
 }

@@ -13,6 +13,7 @@ import { useTheme } from "@/theme/theme";
 import { palette } from "@/theme/tokens";
 import { type Doctor } from "@/lib/mock";
 import { getDoctor } from "@/api/doctors";
+import { getDoctorReviews, type DoctorReviewSummary } from "@/api/reviews";
 
 const slots = ["오늘 14:30", "오늘 15:15", "오늘 16:00", "내일 10:00", "내일 11:30"];
 
@@ -23,11 +24,20 @@ export default function DoctorDetail() {
   const router = useRouter();
   const [picked, setPicked] = useState<string | null>(null);
   const [doctor, setDoctor] = useState<Doctor | null | undefined>(undefined);
+  const [reviews, setReviews] = useState<DoctorReviewSummary | null>(null);
 
   useEffect(() => {
     let alive = true;
     getDoctor(String(id))
-      .then((d) => alive && setDoctor(d))
+      .then((d) => {
+        if (!alive) return;
+        setDoctor(d);
+        if (d) {
+          getDoctorReviews(d.userId ?? d.id)
+            .then((r) => alive && setReviews(r))
+            .catch(() => {});
+        }
+      })
       .catch(() => alive && setDoctor(null));
     return () => {
       alive = false;
@@ -83,9 +93,13 @@ export default function DoctorDetail() {
 
         {/* 지표 */}
         <Card style={{ flexDirection: "row", marginTop: spacing.x6 }}>
-          <Stat value={doctor.rating.toFixed(1)} label="평점" icon="star" />
+          <Stat
+            value={(reviews && reviews.count > 0 ? reviews.average : doctor.rating).toFixed(1)}
+            label="평점"
+            icon="star"
+          />
           <Divider />
-          <Stat value={`${doctor.reviews}`} label="리뷰" />
+          <Stat value={`${reviews ? reviews.count : doctor.reviews}`} label="리뷰" />
           <Divider />
           <Stat value={doctor.nextSlot.replace(" ", "\n")} label="가장 빠른" small />
         </Card>
@@ -131,6 +145,45 @@ export default function DoctorDetail() {
             })}
           </View>
         </View>
+
+        {/* 후기 */}
+        {reviews && reviews.reviews.length > 0 ? (
+          <View style={{ marginTop: spacing.x6, gap: spacing.x3 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+              <Text variant="h3">환자 후기</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                <Ionicons name="star" size={15} color={palette.warning} />
+                <Text variant="small" color="muted">
+                  {reviews.average.toFixed(1)} · {reviews.count}개
+                </Text>
+              </View>
+            </View>
+            {reviews.reviews.slice(0, 5).map((r) => (
+              <Card key={r.id} style={{ gap: 6 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                  <Text variant="small" style={{ fontWeight: "700" }}>
+                    {r.patientName ?? "익명"}
+                  </Text>
+                  <View style={{ flexDirection: "row", gap: 1 }}>
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <Ionicons
+                        key={n}
+                        name={n <= r.rating ? "star" : "star-outline"}
+                        size={13}
+                        color={n <= r.rating ? palette.warning : colors.line}
+                      />
+                    ))}
+                  </View>
+                </View>
+                {r.comment ? (
+                  <Text variant="small" color="muted" style={{ lineHeight: 20 }}>
+                    {r.comment}
+                  </Text>
+                ) : null}
+              </Card>
+            ))}
+          </View>
+        ) : null}
       </Screen>
 
       {/* 하단 고정 CTA */}
