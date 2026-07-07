@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { View, ActivityIndicator, Alert, StyleSheet } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Header } from "@/components/Header";
@@ -18,6 +18,7 @@ import { DEMO_MODE } from "@/lib/config";
 
 export default function DocumentDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
   const { colors, spacing } = useTheme();
   const insets = useSafeAreaInsets();
   const [doc, setDoc] = useState<MedDocument | null | undefined>(undefined);
@@ -129,7 +130,7 @@ export default function DocumentDetail() {
           label="약국 전송"
           variant="secondary"
           style={{ flex: 1 }}
-          onPress={() => Alert.alert("약국 전송", "연동된 약국으로 처방전을 전송했어요.")}
+          onPress={() => router.push(`/pharmacy/${doc.id}`)}
         />
         <Button
           label={saving ? "저장 중…" : "PDF 저장"}

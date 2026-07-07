@@ -89,6 +89,7 @@ function RootNavigator() {
         <Stack.Screen name="notifications" />
         <Stack.Screen name="documents/index" />
         <Stack.Screen name="documents/[id]" />
+        <Stack.Screen name="pharmacy/[id]" />
         <Stack.Screen name="settings" />
         <Stack.Screen name="support" />
         <Stack.Screen name="profile-edit" />
