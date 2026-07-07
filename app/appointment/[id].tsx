@@ -101,9 +101,17 @@ export default function AppointmentDetail() {
               full
               onPress={() => router.push("/documents")}
             />
+            {!isDoctor ? (
+              <Button
+                label="진료 후기 남기기"
+                variant="secondary"
+                full
+                onPress={() => router.push(`/review/${appt.id}`)}
+              />
+            ) : null}
             <Button
               label="다시 예약"
-              variant="secondary"
+              variant="ghost"
               full
               onPress={() => router.push("/(tabs)/doctors")}
             />
