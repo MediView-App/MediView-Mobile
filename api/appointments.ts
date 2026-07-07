@@ -1,5 +1,6 @@
 import { api } from "@/lib/api";
-import { DEMO_MODE } from "@/lib/config";
+import { DEMO_MODE, WS_URL } from "@/lib/config";
+import { getWsTicket } from "./ws";
 import type { AppointmentDto } from "@/lib/types";
 import { appointments as mockAppointments } from "@/lib/mock";
 
@@ -37,6 +38,35 @@ export async function getQueueStatus(appointmentId: string | number): Promise<Qu
   } catch {
     return null;
   }
+}
+
+export type QueueSocket = { close: () => void };
+
+/**
+ * 대기 순번 WebSocket 구독. 서버가 접속 즉시 + 대기열 변경 시 순번을 push 한다.
+ * 티켓 발급 실패/데모면 null(호출 측에서 폴링으로 폴백).
+ */
+export async function connectQueue(
+  appointmentId: string | number,
+  onStatus: (s: QueueStatus) => void,
+): Promise<QueueSocket | null> {
+  if (DEMO_MODE) return null;
+  const ticket = await getWsTicket();
+  if (!ticket) return null;
+
+  const ws = new WebSocket(
+    `${WS_URL}/ws/queue/${appointmentId}?ticket=${encodeURIComponent(ticket)}`,
+  );
+  ws.onmessage = (ev: { data: unknown }) => {
+    try {
+      const raw = typeof ev.data === "string" ? ev.data : "";
+      const d = JSON.parse(raw) as Partial<QueueStatus>;
+      if (d && typeof d.position === "number") onStatus(d as QueueStatus);
+    } catch {
+      // 무시
+    }
+  };
+  return { close: () => ws.close() };
 }
 
 /** 담당 의료인의 진료 대기열(완료·취소 제외). */

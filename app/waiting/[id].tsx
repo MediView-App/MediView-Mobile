@@ -11,7 +11,7 @@ import { useTheme } from "@/theme/theme";
 import { palette } from "@/theme/tokens";
 import { doctors } from "@/lib/mock";
 import { DEMO_MODE } from "@/lib/config";
-import { getQueueStatus } from "@/api/appointments";
+import { getQueueStatus, connectQueue, type QueueSocket } from "@/api/appointments";
 
 export default function WaitingRoom() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -30,19 +30,31 @@ export default function WaitingRoom() {
     return () => clearInterval(t);
   }, [ready]);
 
-  // 실서버: 대기 순번을 주기적으로 폴링해 내 차례가 되면 입장 가능 상태로 전환.
+  // 실서버: 대기 순번을 WebSocket 으로 구독(변경 시 push). 실패하면 폴링으로 폴백.
   useEffect(() => {
     if (DEMO_MODE) return;
     let alive = true;
-    const poll = async () => {
-      const s = await getQueueStatus(String(id));
-      if (alive && s) setAhead(Math.max(0, s.position));
-    };
-    poll();
-    const t = setInterval(poll, 5000);
+    let sock: QueueSocket | null = null;
+    let pollTimer: ReturnType<typeof setInterval> | null = null;
+
+    (async () => {
+      sock = await connectQueue(String(id), (s) => {
+        if (alive) setAhead(Math.max(0, s.position));
+      });
+      if (sock) return;
+      // 폴백: 5초 폴링
+      const poll = async () => {
+        const s = await getQueueStatus(String(id));
+        if (alive && s) setAhead(Math.max(0, s.position));
+      };
+      poll();
+      pollTimer = setInterval(poll, 5000);
+    })();
+
     return () => {
       alive = false;
-      clearInterval(t);
+      sock?.close();
+      if (pollTimer) clearInterval(pollTimer);
     };
   }, [id]);
 
