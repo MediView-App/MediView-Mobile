@@ -148,7 +148,8 @@ export default function DoctorDetail() {
           label={picked ? `${picked} 예약하기` : "시간을 선택하세요"}
           full
           onPress={() => {
-            if (picked) router.push(`/booking/${doctor.id}`);
+            // 예약 전 응급 스크리닝 + 필수 고지·동의 단계를 거친다.
+            if (picked) router.push(`/eligibility/${doctor.id}`);
           }}
         />
       </View>

@@ -9,6 +9,7 @@ type ButtonProps = {
   onPress?: () => void;
   variant?: Variant;
   full?: boolean;
+  disabled?: boolean;
   style?: ViewStyle;
 };
 
@@ -18,6 +19,7 @@ export function Button({
   onPress,
   variant = "primary",
   full,
+  disabled = false,
   style,
 }: ButtonProps) {
   const { colors, radius } = useTheme();
@@ -35,8 +37,10 @@ export function Button({
 
   return (
     <Pressable
-      onPress={onPress}
+      onPress={disabled ? undefined : onPress}
       accessibilityRole="button"
+      accessibilityState={{ disabled }}
+      disabled={disabled}
       style={({ pressed }) => [
         styles.base,
         {
@@ -45,8 +49,8 @@ export function Button({
           borderWidth: variant === "secondary" ? 1 : 0,
           borderColor: colors.lineStrong,
           alignSelf: full ? "stretch" : "flex-start",
-          opacity: pressed ? 0.92 : 1,
-          transform: [{ scale: pressed ? 0.99 : 1 }],
+          opacity: disabled ? 0.45 : pressed ? 0.92 : 1,
+          transform: [{ scale: pressed && !disabled ? 0.99 : 1 }],
         },
         style,
       ]}

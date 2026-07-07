@@ -20,6 +20,26 @@ type DrugRow = { name: string; dose: string; freqPerDay: string; days: string; u
 const emptyDrug: DrugRow = { name: "", dose: "", freqPerDay: "", days: "", usage: "" };
 const today = new Date().toISOString().slice(0, 10);
 
+// 비대면 처방이 제한될 수 있는 성분(예시). 실제 목록은 식약처·복지부 고시 기준으로 관리해야 함.
+const RESTRICTED_KEYWORDS = [
+  "졸피뎀", "zolpidem",
+  "디아제팜", "diazepam",
+  "알프라졸람", "alprazolam",
+  "펜타닐", "fentanyl",
+  "옥시코돈", "oxycodone",
+  "프로포폴", "propofol",
+  "펜터민", "phentermine",
+  "메칠페니데이트", "메틸페니데이트", "methylphenidate",
+];
+
+function restrictedHits(drugs: DrugRow[]): string[] {
+  return drugs
+    .map((d) => d.name.trim())
+    .filter((name) =>
+      name && RESTRICTED_KEYWORDS.some((k) => name.toLowerCase().includes(k.toLowerCase())),
+    );
+}
+
 export default function Prescribe() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors, spacing, radius } = useTheme();
@@ -137,6 +157,18 @@ export default function Prescribe() {
 
         {type === "PRESCRIPTION" ? (
           <>
+            {restrictedHits(drugs).length > 0 ? (
+              <Card style={{ gap: 8, borderColor: palette.warning, borderWidth: 1 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                  <Ionicons name="warning-outline" size={18} color={palette.warning} />
+                  <Text variant="bodyStrong">비대면 처방 제한 주의</Text>
+                </View>
+                <Text variant="caption" color="muted" style={{ lineHeight: 18 }}>
+                  {restrictedHits(drugs).join(", ")} — 마약류·오남용 우려 의약품은 관련
+                  법령·고시에 따라 비대면 처방이 제한될 수 있습니다. 처방 가능 여부를 확인하세요.
+                </Text>
+              </Card>
+            ) : null}
             <View style={{ gap: spacing.x3 }}>
               <Text variant="bodyStrong">처방 의약품</Text>
               {drugs.map((d, i) => (
