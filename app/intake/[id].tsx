@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, TextInput, Pressable, StyleSheet } from "react-native";
+import { View, TextInput, Pressable, Alert, StyleSheet } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Header } from "@/components/Header";
@@ -8,6 +8,7 @@ import { Text } from "@/components/Text";
 import { FooterCTA } from "../booking/[id]";
 import { useTheme } from "@/theme/theme";
 import { palette } from "@/theme/tokens";
+import { submitIntake } from "@/api/intake";
 
 const durations = ["오늘", "2~3일", "1주일 이상", "한 달 이상"];
 const conditions = ["고혈압", "당뇨", "알레르기", "임신 중", "복용 중인 약"];
@@ -19,9 +20,22 @@ export default function Intake() {
   const [symptom, setSymptom] = useState("");
   const [dur, setDur] = useState<string | null>(null);
   const [picked, setPicked] = useState<string[]>([]);
+  const [submitting, setSubmitting] = useState(false);
 
   const toggle = (c: string) =>
     setPicked((p) => (p.includes(c) ? p.filter((x) => x !== c) : [...p, c]));
+
+  const submit = async () => {
+    setSubmitting(true);
+    try {
+      await submitIntake(String(id), symptom.trim(), dur, picked);
+      router.replace("/(tabs)/appointments");
+    } catch (e) {
+      Alert.alert("제출 실패", e instanceof Error ? e.message : "잠시 후 다시 시도해 주세요.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <>
@@ -144,10 +158,7 @@ export default function Intake() {
         </Pressable>
       </Screen>
 
-      <FooterCTA
-        label="제출하고 예약 완료"
-        onPress={() => router.replace("/(tabs)/appointments")}
-      />
+      <FooterCTA label={submitting ? "제출 중…" : "제출하고 예약 완료"} onPress={submit} />
     </>
   );
 }

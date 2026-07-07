@@ -18,6 +18,8 @@ export type DoctorQueueItem = {
   status: AppointmentDto["status"];
   scheduledAt?: string;
   queueOrder?: number;
+  chiefComplaint?: string;
+  triage?: "LOW" | "MEDIUM" | "HIGH";
 };
 
 export type QueueStatus = {
@@ -41,9 +43,9 @@ export async function getQueueStatus(appointmentId: string | number): Promise<Qu
 export async function getDoctorQueue(): Promise<DoctorQueueItem[]> {
   if (DEMO_MODE) {
     return [
-      { appointmentId: 1, patientName: "김*수", status: "WAITING", queueOrder: 1 },
-      { appointmentId: 2, patientName: "이*은", status: "WAITING", queueOrder: 2 },
-      { appointmentId: 3, patientName: "박*호", status: "WAITING", queueOrder: 3 },
+      { appointmentId: 1, patientName: "김*수", status: "WAITING", queueOrder: 1, chiefComplaint: "3일 지속 · 인후통·기침, 미열", triage: "LOW" },
+      { appointmentId: 2, patientName: "이*은", status: "WAITING", queueOrder: 2, chiefComplaint: "오늘 · 두드러기·가려움 · 기저: 알레르기", triage: "MEDIUM" },
+      { appointmentId: 3, patientName: "박*호", status: "WAITING", queueOrder: 3, chiefComplaint: "고혈압 약 재처방 요청", triage: "LOW" },
     ];
   }
   try {

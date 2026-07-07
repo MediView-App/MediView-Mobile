@@ -87,9 +87,12 @@ export function DoctorHome() {
                       </View>
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text variant="bodyStrong">{name}</Text>
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                        <Text variant="bodyStrong">{name}</Text>
+                        {q.triage ? <TriageBadge level={q.triage} /> : null}
+                      </View>
                       <Text variant="small" color="muted" numberOfLines={1}>
-                        {q.status === "IN_PROGRESS" ? "진료 중" : "진료 대기"}
+                        {q.chiefComplaint ?? (q.status === "IN_PROGRESS" ? "진료 중" : "문진 미작성")}
                       </Text>
                     </View>
                   </View>
@@ -114,6 +117,22 @@ export function DoctorHome() {
         </View>
       )}
     </Screen>
+  );
+}
+
+function TriageBadge({ level }: { level: "LOW" | "MEDIUM" | "HIGH" }) {
+  const map = {
+    HIGH: { label: "응급의심", bg: palette.danger },
+    MEDIUM: { label: "주의", bg: palette.warning },
+    LOW: { label: "경증", bg: palette.success },
+  } as const;
+  const c = map[level];
+  return (
+    <View style={{ backgroundColor: c.bg, borderRadius: 999, paddingHorizontal: 7, paddingVertical: 2 }}>
+      <Text variant="caption" style={{ color: "#fff", fontWeight: "700", fontSize: 10 }}>
+        {c.label}
+      </Text>
+    </View>
   );
 }
 
