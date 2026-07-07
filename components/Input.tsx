@@ -46,6 +46,8 @@ export function Input({ label, icon, secure, error, style, ...rest }: InputProps
           style={[{ flex: 1, color: colors.content, fontSize: 16, paddingVertical: 14 }, style]}
           placeholderTextColor={colors.subtle}
           secureTextEntry={hidden}
+          accessibilityLabel={label}
+          maxFontSizeMultiplier={2}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           {...rest}

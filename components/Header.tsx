@@ -33,11 +33,13 @@ export function Header({
       <Pressable
         onPress={onBack ?? (() => router.back())}
         hitSlop={8}
+        accessibilityRole="button"
+        accessibilityLabel="뒤로 가기"
         style={[styles.icon, { backgroundColor: colors.surface, borderColor: colors.line }]}
       >
         <Ionicons name="chevron-back" size={22} color={colors.content} />
       </Pressable>
-      <Text variant="h3" numberOfLines={1} style={{ flex: 1 }}>
+      <Text variant="h3" numberOfLines={1} style={{ flex: 1 }} accessibilityRole="header">
         {title}
       </Text>
       <View style={{ minWidth: 40, alignItems: "flex-end" }}>{right}</View>

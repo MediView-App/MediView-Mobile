@@ -16,11 +16,14 @@ export function Text({
   color = "content",
   center,
   style,
+  maxFontSizeMultiplier = 2,
   ...rest
 }: TextProps) {
   const theme = useTheme();
   return (
     <RNText
+      // 접근성: OS 큰 글씨 설정을 따르되(기본 allowFontScaling), 레이아웃 붕괴를 막기 위해 2배로 상한.
+      maxFontSizeMultiplier={maxFontSizeMultiplier}
       style={[
         theme.typography[variant],
         { color: theme.colors[color] },
