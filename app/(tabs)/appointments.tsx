@@ -78,7 +78,7 @@ export default function Appointments() {
                 <Button
                   label="진료실 입장"
                   style={{ flex: 1 }}
-                  onPress={() => router.push("/consult/1")}
+                  onPress={() => router.push(`/waiting/${a.id}`)}
                 />
                 <Button label="변경" variant="secondary" style={{ flex: 1 }} />
               </View>

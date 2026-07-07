@@ -57,7 +57,11 @@ export default function AppointmentDetail() {
 
         {active ? (
           <View style={{ marginTop: spacing.x6, gap: spacing.x2 }}>
-            <Button label="진료실 입장" full onPress={() => router.push("/consult/1")} />
+            <Button
+              label={isDoctor ? "진료 시작" : "진료실 입장"}
+              full
+              onPress={() => router.push(isDoctor ? "/consult/1" : `/waiting/${appt.id}`)}
+            />
             <View style={{ flexDirection: "row", gap: 8 }}>
               <Button
                 label="채팅 상담"

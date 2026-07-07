@@ -83,6 +83,7 @@ function RootNavigator() {
         <Stack.Screen name="eligibility/[id]" />
         <Stack.Screen name="booking/[id]" />
         <Stack.Screen name="intake/[id]" />
+        <Stack.Screen name="waiting/[id]" />
         <Stack.Screen name="consult/[id]" options={{ animation: "slide_from_bottom" }} />
         <Stack.Screen name="summary/[id]" />
         <Stack.Screen name="payment/[id]" options={{ presentation: "modal" }} />
