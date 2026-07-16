@@ -121,15 +121,16 @@ export function DoctorHome() {
 }
 
 function TriageBadge({ level }: { level: "LOW" | "MEDIUM" | "HIGH" }) {
+  // JellySafe 틴트 레시피(배경 -5, 텍스트 -50) — 색만 쓰지 않고 라벨을 함께 표기.
   const map = {
-    HIGH: { label: "응급의심", bg: palette.danger },
-    MEDIUM: { label: "주의", bg: palette.warning },
-    LOW: { label: "경증", bg: palette.success },
+    HIGH: { label: "응급의심", bg: "#FDECEE", fg: "#DE122A" }, // critical
+    MEDIUM: { label: "주의", bg: "#FFF8DB", fg: "#9E7E00" }, // caution
+    LOW: { label: "경증", bg: "#EAF6F0", fg: "#228756" }, // safe
   } as const;
   const c = map[level];
   return (
-    <View style={{ backgroundColor: c.bg, borderRadius: 999, paddingHorizontal: 7, paddingVertical: 2 }}>
-      <Text variant="caption" style={{ color: "#fff", fontWeight: "700", fontSize: 10 }}>
+    <View style={{ backgroundColor: c.bg, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 }}>
+      <Text variant="caption" style={{ color: c.fg, fontWeight: "700", fontSize: 10 }}>
         {c.label}
       </Text>
     </View>
