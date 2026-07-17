@@ -12,9 +12,11 @@ import { Button } from "@/components/Button";
 import { useTheme } from "@/theme/theme";
 import { palette } from "@/theme/tokens";
 import { docTypeLabel, type MedDocument } from "@/lib/mock";
-import { getDocument } from "@/api/documents";
+import { getDocument, getDocumentDetail, type DocumentDetail } from "@/api/documents";
 import { saveDocumentPdf, downloadServerDocumentPdf } from "@/lib/pdf";
 import { DEMO_MODE } from "@/lib/config";
+import { scheduleMedicationReminders, cancelMedicationReminders, countMedicationReminders } from "@/lib/medication";
+import { requestRefill } from "@/api/refill";
 
 export default function DocumentDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -23,6 +25,70 @@ export default function DocumentDetail() {
   const insets = useSafeAreaInsets();
   const [doc, setDoc] = useState<MedDocument | null | undefined>(undefined);
   const [saving, setSaving] = useState(false);
+  const [detail, setDetail] = useState<DocumentDetail | null>(null);
+  const [reminders, setReminders] = useState(0);
+  const [busy, setBusy] = useState(false);
+
+  const isPrescription = doc?.type === "PRESCRIPTION";
+
+  // 처방전이면 본문(약품·용법)과 예약된 복약 알림 개수를 가져온다.
+  useEffect(() => {
+    if (!isPrescription) return;
+    let alive = true;
+    getDocumentDetail(String(id)).then((d) => alive && setDetail(d));
+    countMedicationReminders(String(id)).then((n) => alive && setReminders(n));
+    return () => {
+      alive = false;
+    };
+  }, [id, isPrescription]);
+
+  const toggleReminders = async () => {
+    if (!detail?.prescription) {
+      Alert.alert("복약 알림", "처방 내용을 불러오지 못했어요.");
+      return;
+    }
+    setBusy(true);
+    try {
+      if (reminders > 0) {
+        await cancelMedicationReminders(String(id));
+        setReminders(0);
+        Alert.alert("복약 알림", "알림을 껐어요.");
+      } else {
+        const n = await scheduleMedicationReminders(String(id), detail.prescription);
+        setReminders(n);
+        Alert.alert(
+          "복약 알림",
+          n > 0
+            ? `${n}건의 복약 알림을 예약했어요.`
+            : "알림 권한이 없거나 예약할 시간이 없어요. (웹/시뮬레이터는 미지원)",
+        );
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onRefill = async () => {
+    Alert.alert("재처방 요청", "같은 의료진에게 재처방 진료를 요청할까요?", [
+      { text: "취소", style: "cancel" },
+      {
+        text: "요청하기",
+        onPress: async () => {
+          setBusy(true);
+          try {
+            await requestRefill(String(id));
+            Alert.alert("요청 완료", "재처방 진료가 접수되었어요. 의료진 확인 후 진행됩니다.", [
+              { text: "확인", onPress: () => router.replace("/(tabs)/appointments") },
+            ]);
+          } catch (e) {
+            Alert.alert("요청 실패", e instanceof Error ? e.message : "잠시 후 다시 시도해 주세요.");
+          } finally {
+            setBusy(false);
+          }
+        },
+      },
+    ]);
+  };
 
   const onSave = async () => {
     if (!doc) return;
@@ -108,6 +174,46 @@ export default function DocumentDetail() {
             </View>
           </View>
         </Card>
+
+        {/* 처방전 전용: 복약 알림 · 재처방 */}
+        {isPrescription ? (
+          <>
+            <Card style={{ marginTop: spacing.x4, gap: spacing.x3 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <Ionicons name="alarm-outline" size={18} color={colors.brand} />
+                <Text variant="bodyStrong" style={{ flex: 1 }}>
+                  복약 알림
+                </Text>
+                {reminders > 0 ? <Badge tone="brand" label={`${reminders}건 예약됨`} /> : null}
+              </View>
+              <Text variant="small" color="muted" style={{ lineHeight: 20 }}>
+                {detail?.prescription?.drugs?.length
+                  ? `${detail.prescription.drugs.map((d) => d.name).join(", ")} · 복용 시간에 맞춰 알려드려요.`
+                  : "처방 용법에 맞춰 복용 시간을 알려드려요."}
+              </Text>
+              <Button
+                label={busy ? "처리 중…" : reminders > 0 ? "복약 알림 끄기" : "복약 알림 켜기"}
+                variant={reminders > 0 ? "secondary" : "primary"}
+                full
+                disabled={busy}
+                onPress={toggleReminders}
+              />
+            </Card>
+
+            <Card style={{ marginTop: spacing.x3, gap: spacing.x3 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <Ionicons name="repeat-outline" size={18} color={colors.brand} />
+                <Text variant="bodyStrong" style={{ flex: 1 }}>
+                  같은 약이 더 필요하신가요?
+                </Text>
+              </View>
+              <Text variant="small" color="muted" style={{ lineHeight: 20 }}>
+                재처방을 요청하면 같은 의료진에게 진료가 접수됩니다. 의료진 확인 후 처방됩니다.
+              </Text>
+              <Button label="재처방 요청" variant="secondary" full disabled={busy} onPress={onRefill} />
+            </Card>
+          </>
+        ) : null}
       </Screen>
 
       <View
