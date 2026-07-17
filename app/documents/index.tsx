@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { View, Pressable, ActivityIndicator, StyleSheet } from "react-native";
+import { View, Pressable, StyleSheet } from "react-native";
+import { SkeletonList } from "@/components/Skeleton";
 import { Link } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Header } from "@/components/Header";
@@ -38,9 +39,7 @@ export default function Documents() {
       <Header title="서류함" />
       <Screen>
         {documents === null ? (
-          <View style={{ paddingVertical: 48, alignItems: "center" }}>
-            <ActivityIndicator color={colors.brand} />
-          </View>
+          <SkeletonList count={3} />
         ) : documents.length ? (
           <View style={{ gap: spacing.x2 }}>
             {documents.map((d) => (

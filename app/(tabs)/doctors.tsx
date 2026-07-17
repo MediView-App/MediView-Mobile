@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { View, TextInput, Pressable, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
+import { View, TextInput, Pressable, StyleSheet, ScrollView } from "react-native";
+import { SkeletonList } from "@/components/Skeleton";
 import { Link } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Screen } from "@/components/Screen";
@@ -91,11 +92,7 @@ export default function Doctors() {
       </ScrollView>
 
       {/* 목록 */}
-      {items === null ? (
-        <View style={{ paddingVertical: 48, alignItems: "center" }}>
-          <ActivityIndicator color={colors.brand} />
-        </View>
-      ) : null}
+      {items === null ? <SkeletonList count={4} /> : null}
       <View style={{ gap: spacing.x3 }}>
         {filtered.map((d) => (
           <Link key={d.id} href={`/doctor/${d.id}`} asChild>

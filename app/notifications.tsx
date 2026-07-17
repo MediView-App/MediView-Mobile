@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { View, ActivityIndicator, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
+import { SkeletonList } from "@/components/Skeleton";
 import { Ionicons } from "@expo/vector-icons";
 import { Header } from "@/components/Header";
 import { Screen } from "@/components/Screen";
@@ -37,9 +38,7 @@ export default function Notifications() {
       <Header title="알림" />
       <Screen>
         {notifications === null ? (
-          <View style={{ paddingVertical: 48, alignItems: "center" }}>
-            <ActivityIndicator color={colors.brand} />
-          </View>
+          <SkeletonList count={4} />
         ) : notifications.length ? (
           <View style={{ gap: spacing.x2 }}>
             {notifications.map((n) => (

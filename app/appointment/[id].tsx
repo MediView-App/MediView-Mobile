@@ -73,7 +73,8 @@ export default function AppointmentDetail() {
                 label="일정 변경"
                 variant="secondary"
                 style={{ flex: 1 }}
-                onPress={() => Alert.alert("일정 변경", "변경 가능한 시간을 안내해 드릴게요.")}
+                // 변경 = 담당의의 예약 가능 시간에서 새 슬롯 선택(예약 플로우 재사용)
+                onPress={() => router.push(`/doctor/${appt.id}?reschedule=1`)}
               />
             </View>
             {isDoctor ? (
