@@ -74,7 +74,8 @@ export default function Consult() {
           <Text variant="caption" style={{ color: "#fff" }}>
             {doctor.name} 의료진
           </Text>
-          <Ionicons name="shield-checkmark" size={13} color={palette.accent[400]} />
+          {/* 어두운 진료실 배경 위 대비 확보 */}
+          <Ionicons name="shield-checkmark" size={13} color={palette.primary[200]} />
         </View>
       </View>
 

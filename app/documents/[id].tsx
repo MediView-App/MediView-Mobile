@@ -150,7 +150,8 @@ export default function DocumentDetail() {
         <Card style={{ padding: 0, overflow: "hidden" }}>
           <View style={[styles.docHead, { backgroundColor: palette.primary[700] }]}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-              <Ionicons name="shield-checkmark" size={18} color={palette.accent[400]} />
+              {/* 남색 헤더 위에서는 브랜드 블루가 묻히므로 밝은 톤으로 */}
+              <Ionicons name="shield-checkmark" size={18} color={palette.primary[200]} />
               <Text variant="bodyStrong" style={{ color: "#fff" }}>
                 MediView 전자문서
               </Text>
