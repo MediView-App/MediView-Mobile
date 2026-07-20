@@ -19,6 +19,7 @@ const menu: Row[][] = [
   [
     { icon: "shield-checkmark-outline", label: "본인확인(KYC)", hint: "완료", href: "/(auth)/kyc" },
     { icon: "card-outline", label: "결제 수단", href: "/payment-methods" },
+    { icon: "time-outline", label: "진료 이력", href: "/history" },
     { icon: "document-text-outline", label: "서류함", href: "/documents" },
     { icon: "notifications-outline", label: "알림", href: "/notifications" },
   ],

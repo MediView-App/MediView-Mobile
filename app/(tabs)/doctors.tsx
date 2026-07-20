@@ -14,10 +14,28 @@ import { listDoctors } from "@/api/doctors";
 
 const specialties = ["전체", "내과", "피부과", "정신건강의학과", "소아청소년과"];
 
+type SortKey = "recommended" | "rating" | "soonest";
+const sorts: { key: SortKey; label: string }[] = [
+  { key: "recommended", label: "추천순" },
+  { key: "rating", label: "평점순" },
+  { key: "soonest", label: "빠른 진료순" },
+];
+
+/** "오늘 14:30" / "내일 10:00" → 정렬용 분 단위 값. 파싱 실패 시 뒤로 보낸다. */
+function slotRank(nextSlot: string): number {
+  const m = nextSlot?.match(/(\d{1,2}):(\d{2})/);
+  const minutes = m ? Number(m[1]) * 60 + Number(m[2]) : 12 * 60;
+  if (!nextSlot) return Number.MAX_SAFE_INTEGER;
+  if (nextSlot.includes("오늘")) return minutes;
+  if (nextSlot.includes("내일")) return 24 * 60 + minutes;
+  return 48 * 60 + minutes;
+}
+
 export default function Doctors() {
   const { colors, radius, spacing } = useTheme();
   const [q, setQ] = useState("");
   const [spec, setSpec] = useState("전체");
+  const [sort, setSort] = useState<SortKey>("recommended");
   const [items, setItems] = useState<Doctor[] | null>(null);
 
   useEffect(() => {
@@ -30,15 +48,29 @@ export default function Doctors() {
     };
   }, []);
 
-  const filtered = useMemo(
-    () =>
-      (items ?? []).filter(
-        (d) =>
-          (spec === "전체" || d.specialty === spec) &&
-          (q === "" || d.name.includes(q) || d.org.includes(q))
-      ),
-    [items, q, spec]
-  );
+  const filtered = useMemo(() => {
+    const list = (items ?? []).filter(
+      (d) =>
+        (spec === "전체" || d.specialty === spec) &&
+        (q === "" || d.name.includes(q) || d.org.includes(q)),
+    );
+
+    const sorted = [...list];
+    if (sort === "rating") {
+      sorted.sort((a, b) => b.rating - a.rating || b.reviews - a.reviews);
+    } else if (sort === "soonest") {
+      sorted.sort((a, b) => slotRank(a.nextSlot) - slotRank(b.nextSlot));
+    } else {
+      // 추천순: 검증된 의료진 우선 → 평점 → 리뷰 수
+      sorted.sort(
+        (a, b) =>
+          Number(b.verified) - Number(a.verified) ||
+          b.rating - a.rating ||
+          b.reviews - a.reviews,
+      );
+    }
+    return sorted;
+  }, [items, q, spec, sort]);
 
   return (
     <Screen title="의료진 찾기" subtitle="면허 검증을 통과한 의료진만 만납니다">
@@ -90,6 +122,41 @@ export default function Doctors() {
           );
         })}
       </ScrollView>
+
+      {/* 정렬 + 결과 수 */}
+      {items !== null ? (
+        <View style={[styles.rowBetween, { marginBottom: spacing.x3 }]}>
+          <Text variant="small" color="muted">
+            {filtered.length}명
+          </Text>
+          <View style={{ flexDirection: "row", gap: 6 }}>
+            {sorts.map((s) => {
+              const on = sort === s.key;
+              return (
+                <Pressable
+                  key={s.key}
+                  onPress={() => setSort(s.key)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: on }}
+                  style={{
+                    paddingHorizontal: 10,
+                    paddingVertical: 6,
+                    borderRadius: radius.full,
+                    backgroundColor: on ? colors.surface2 : "transparent",
+                  }}
+                >
+                  <Text
+                    variant="caption"
+                    style={{ color: on ? colors.content : colors.subtle, fontWeight: on ? "700" : "500" }}
+                  >
+                    {s.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+      ) : null}
 
       {/* 목록 */}
       {items === null ? <SkeletonList count={4} /> : null}

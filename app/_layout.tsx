@@ -94,6 +94,7 @@ function RootNavigator() {
         <Stack.Screen name="review/[id]" />
         <Stack.Screen name="payment/[id]" options={{ presentation: "modal" }} />
         <Stack.Screen name="notifications" />
+        <Stack.Screen name="history" />
         <Stack.Screen name="documents/index" />
         <Stack.Screen name="documents/[id]" />
         <Stack.Screen name="pharmacy/[id]" />
