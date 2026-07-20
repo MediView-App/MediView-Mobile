@@ -127,6 +127,34 @@ export async function listMyAppointments(): Promise<AppointmentView[]> {
   }
 }
 
+/** 예약 취소. 진행 중/완료된 진료는 서버가 거부한다. */
+export async function cancelAppointment(
+  appointmentId: string | number,
+  reason?: string,
+): Promise<void> {
+  if (DEMO_MODE) {
+    await new Promise((r) => setTimeout(r, 500));
+    return;
+  }
+  const q = reason ? `?reason=${encodeURIComponent(reason)}` : "";
+  await api<AppointmentDto>(`/api/appointments/${appointmentId}/cancel${q}`, { method: "POST" });
+}
+
+/** 예약 일시 변경. */
+export async function rescheduleAppointment(
+  appointmentId: string | number,
+  scheduledAt: string,
+): Promise<void> {
+  if (DEMO_MODE) {
+    await new Promise((r) => setTimeout(r, 500));
+    return;
+  }
+  await api<AppointmentDto>(`/api/appointments/${appointmentId}/reschedule`, {
+    method: "POST",
+    body: { scheduledAt },
+  });
+}
+
 export async function createAppointment(input: {
   doctorId: number;
   organizationId: number;

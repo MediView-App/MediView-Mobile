@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { View, Alert, StyleSheet } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -12,6 +13,8 @@ import { useTheme } from "@/theme/theme";
 import { palette } from "@/theme/tokens";
 import { statusLabel, type AppointmentStatus } from "@/lib/mock";
 import { useAppointment } from "@/lib/useAppointment";
+import { cancelAppointment } from "@/api/appointments";
+import { useToast } from "@/components/Toast";
 import { useAuth } from "@/context/AuthContext";
 
 export default function AppointmentDetail() {
@@ -19,17 +22,31 @@ export default function AppointmentDetail() {
   const { colors, spacing } = useTheme();
   const router = useRouter();
   const { user } = useAuth();
+  const toast = useToast();
+  const [cancelling, setCancelling] = useState(false);
   const isDoctor = user?.role === "DOCTOR";
   const appt = useAppointment(id);
   const active = appt?.status !== "COMPLETED";
 
   const cancel = () =>
-    Alert.alert("예약 취소", "이 예약을 취소할까요?", [
+    Alert.alert("예약 취소", "이 예약을 취소할까요? 되돌릴 수 없습니다.", [
       { text: "닫기", style: "cancel" },
       {
         text: "취소하기",
         style: "destructive",
-        onPress: () => router.replace("/(tabs)/appointments"),
+        onPress: async () => {
+          setCancelling(true);
+          try {
+            await cancelAppointment(String(id));
+            toast.show("예약이 취소되었어요.");
+            router.replace("/(tabs)/appointments");
+          } catch (e) {
+            // 서버가 거부한 사유(진행 중/이미 완료 등)를 그대로 보여준다.
+            toast.show(e instanceof Error ? e.message : "예약을 취소하지 못했어요.", "error");
+          } finally {
+            setCancelling(false);
+          }
+        },
       },
     ]);
 
@@ -86,7 +103,13 @@ export default function AppointmentDetail() {
                 onPress={() => router.push(`/prescribe/${id}`)}
               />
             ) : null}
-            <Button label="예약 취소" variant="ghost" full onPress={cancel} />
+            <Button
+              label={cancelling ? "취소 중…" : "예약 취소"}
+              variant="ghost"
+              full
+              disabled={cancelling}
+              onPress={cancel}
+            />
           </View>
         ) : (
           <View style={{ marginTop: spacing.x6, gap: spacing.x2 }}>
