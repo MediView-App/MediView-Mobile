@@ -8,7 +8,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "backgroundColor": "#12A3A8",
+      "backgroundColor": "#256AF4",
       "resizeMode": "contain"
     },
     "ios": {
@@ -22,12 +22,14 @@
     "android": {
       "package": "com.mediview.app",
       "adaptiveIcon": {
-        "backgroundColor": "#12A3A8"
+        "backgroundColor": "#256AF4"
       },
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",
-        "android.permission.MODIFY_AUDIO_SETTINGS"
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.SCHEDULE_EXACT_ALARM"
       ]
     },
     "web": {
@@ -39,7 +41,14 @@
       "expo-font",
       "expo-asset",
       "expo-secure-store",
-      "expo-dev-client"
+      "expo-dev-client",
+      [
+        "expo-notifications",
+        {
+          "color": "#256AF4",
+          "defaultChannel": "default"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": false
