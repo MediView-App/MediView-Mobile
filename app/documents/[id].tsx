@@ -17,11 +17,13 @@ import { saveDocumentPdf, downloadServerDocumentPdf } from "@/lib/pdf";
 import { DEMO_MODE } from "@/lib/config";
 import { scheduleMedicationReminders, cancelMedicationReminders, countMedicationReminders } from "@/lib/medication";
 import { requestRefill } from "@/api/refill";
+import { useToast } from "@/components/Toast";
 
 export default function DocumentDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { colors, spacing } = useTheme();
+  const toast = useToast();
   const insets = useSafeAreaInsets();
   const [doc, setDoc] = useState<MedDocument | null | undefined>(undefined);
   const [saving, setSaving] = useState(false);
@@ -52,15 +54,15 @@ export default function DocumentDetail() {
       if (reminders > 0) {
         await cancelMedicationReminders(String(id));
         setReminders(0);
-        Alert.alert("복약 알림", "알림을 껐어요.");
+        toast.show("복약 알림을 껐어요.", "info");
       } else {
         const n = await scheduleMedicationReminders(String(id), detail.prescription);
         setReminders(n);
-        Alert.alert(
-          "복약 알림",
+        toast.show(
           n > 0
             ? `${n}건의 복약 알림을 예약했어요.`
-            : "알림 권한이 없거나 예약할 시간이 없어요. (웹/시뮬레이터는 미지원)",
+            : "알림 권한이 없거나 예약할 시간이 없어요.",
+          n > 0 ? "success" : "info",
         );
       }
     } finally {
@@ -77,9 +79,8 @@ export default function DocumentDetail() {
           setBusy(true);
           try {
             await requestRefill(String(id));
-            Alert.alert("요청 완료", "재처방 진료가 접수되었어요. 의료진 확인 후 진행됩니다.", [
-              { text: "확인", onPress: () => router.replace("/(tabs)/appointments") },
-            ]);
+            toast.show("재처방 진료가 접수되었어요. 의료진 확인 후 진행됩니다.");
+            router.replace("/(tabs)/appointments");
           } catch (e) {
             Alert.alert("요청 실패", e instanceof Error ? e.message : "잠시 후 다시 시도해 주세요.");
           } finally {

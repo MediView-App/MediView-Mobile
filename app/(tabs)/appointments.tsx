@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { View, Pressable, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -27,15 +27,17 @@ export default function Appointments() {
   const router = useRouter();
   const [items, setItems] = useState<AppointmentView[] | null>(null);
 
-  useEffect(() => {
-    let alive = true;
-    listMyAppointments()
-      .then((list) => alive && setItems(list))
-      .catch(() => alive && setItems([]));
-    return () => {
-      alive = false;
-    };
+  const load = useCallback(async () => {
+    try {
+      setItems(await listMyAppointments());
+    } catch {
+      setItems([]);
+    }
   }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   if (items === null) {
     return (
@@ -52,7 +54,7 @@ export default function Appointments() {
   const past = items.filter((a) => a.status === "COMPLETED");
 
   return (
-    <Screen title="예약">
+    <Screen title="예약" onRefresh={load}>
       <Text variant="h3" style={{ marginBottom: spacing.x3 }}>
         예정된 진료
       </Text>

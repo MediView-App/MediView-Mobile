@@ -9,6 +9,7 @@ import { Button } from "@/components/Button";
 import { useTheme } from "@/theme/theme";
 import { palette } from "@/theme/tokens";
 import { submitReview } from "@/api/reviews";
+import { useToast } from "@/components/Toast";
 
 const LABELS = ["", "별로예요", "그저 그래요", "괜찮아요", "좋아요", "최고예요"];
 
@@ -16,6 +17,7 @@ export default function Review() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors, spacing, radius } = useTheme();
   const router = useRouter();
+  const toast = useToast();
 
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
@@ -29,11 +31,10 @@ export default function Review() {
     setSubmitting(true);
     try {
       await submitReview(String(id), rating, comment.trim());
-      Alert.alert("감사합니다", "소중한 후기가 등록되었어요.", [
-        { text: "확인", onPress: () => router.back() },
-      ]);
+      toast.show("소중한 후기가 등록되었어요. 감사합니다!");
+      router.back();
     } catch (e) {
-      Alert.alert("등록 실패", e instanceof Error ? e.message : "잠시 후 다시 시도해 주세요.");
+      toast.show(e instanceof Error ? e.message : "등록에 실패했어요. 잠시 후 다시 시도해 주세요.", "error");
     } finally {
       setSubmitting(false);
     }

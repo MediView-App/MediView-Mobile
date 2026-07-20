@@ -9,16 +9,16 @@ import { Button } from "@/components/Button";
 import { Avatar } from "@/components/Avatar";
 import { useTheme } from "@/theme/theme";
 import { palette } from "@/theme/tokens";
-import { doctors } from "@/lib/mock";
 import { DEMO_MODE } from "@/lib/config";
 import { getQueueStatus, connectQueue, type QueueSocket } from "@/api/appointments";
+import { useAppointment } from "@/lib/useAppointment";
 
 export default function WaitingRoom() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors, spacing, radius } = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const doctor = doctors.find((d) => d.id === id) ?? doctors[0];
+  const appt = useAppointment(id);
 
   const [ahead, setAhead] = useState(2); // 내 앞 대기 인원
   const ready = ahead <= 0;
@@ -100,11 +100,11 @@ export default function WaitingRoom() {
         </Text>
 
         <Card style={{ width: "100%", flexDirection: "row", alignItems: "center", gap: 12, marginTop: spacing.x4 }}>
-          <Avatar name={doctor.name} />
+          <Avatar name={appt?.doctorName ?? "의료진"} />
           <View style={{ flex: 1 }}>
-            <Text variant="bodyStrong">{doctor.name} 의료진</Text>
+            <Text variant="bodyStrong">{appt?.doctorName ?? "담당 의료진"}</Text>
             <Text variant="small" color="muted">
-              {doctor.specialty}
+              {appt?.specialty || appt?.organizationName || "비대면 진료"}
             </Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>

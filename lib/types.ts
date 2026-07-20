@@ -54,6 +54,10 @@ export type AppointmentDto = {
   scheduledAt?: string;
   queueOrder?: number;
   createdAt?: string;
+  /** 표시용(백엔드가 함께 내려줌) */
+  doctorName?: string;
+  specialty?: string;
+  organizationName?: string;
 };
 
 export type KycResponse = {

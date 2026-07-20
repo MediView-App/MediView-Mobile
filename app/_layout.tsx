@@ -7,6 +7,8 @@ import { useTheme } from "@/theme/theme";
 import { Loading } from "@/components/Loading";
 import { ErrorScreen } from "@/components/ErrorScreen";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { ToastProvider } from "@/components/Toast";
+import { OfflineBanner } from "@/components/OfflineBanner";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -32,7 +34,10 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <RootNavigator />
+        <ToastProvider>
+          <RootNavigator />
+          <OfflineBanner />
+        </ToastProvider>
       </AuthProvider>
     </SafeAreaProvider>
   );

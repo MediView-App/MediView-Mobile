@@ -6,7 +6,7 @@ import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import { Text } from "@/components/Text";
 import { palette } from "@/theme/tokens";
-import { doctors } from "@/lib/mock";
+import { useAppointment } from "@/lib/useAppointment";
 import { WEBRTC_AVAILABLE } from "@/lib/webrtc";
 import { VideoConsult } from "@/components/VideoConsult";
 
@@ -14,7 +14,8 @@ export default function Consult() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const doctor = doctors.find((d) => d.id === id) ?? doctors[0];
+  const appt = useAppointment(id);
+  const doctorName = appt?.doctorName ?? "담당 의료진";
 
   const [sec, setSec] = useState(0);
   const [muted, setMuted] = useState(false);
@@ -32,7 +33,7 @@ export default function Consult() {
     return (
       <VideoConsult
         sessionId={String(id)}
-        doctorName={doctor.name}
+        doctorName={doctorName}
         onEnd={() => router.replace(`/summary/${id}`)}
       />
     );
@@ -54,7 +55,7 @@ export default function Consult() {
       <View style={styles.remote}>
         <View style={styles.remoteAvatar}>
           <Text variant="display" style={{ color: "rgba(255,255,255,0.9)", fontSize: 44 }}>
-            {doctor.name.charAt(0)}
+            {doctorName.charAt(0)}
           </Text>
         </View>
         <Text variant="body" style={{ color: "rgba(255,255,255,0.6)", marginTop: 12 }}>
@@ -72,7 +73,7 @@ export default function Consult() {
         </View>
         <View style={[styles.pill, { gap: 6 }]}>
           <Text variant="caption" style={{ color: "#fff" }}>
-            {doctor.name} 의료진
+            {doctorName}
           </Text>
           {/* 어두운 진료실 배경 위 대비 확보 */}
           <Ionicons name="shield-checkmark" size={13} color={palette.primary[200]} />

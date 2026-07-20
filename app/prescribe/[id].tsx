@@ -16,6 +16,7 @@ import {
   type PrescriptionContent,
 } from "@/api/documents";
 import { getIntake, parseIntakeMeta, type IntakeForm } from "@/api/intake";
+import { useToast } from "@/components/Toast";
 
 type DrugRow = { name: string; dose: string; freqPerDay: string; days: string; usage: string };
 
@@ -64,6 +65,7 @@ export default function Prescribe() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors, spacing, radius } = useTheme();
   const router = useRouter();
+  const toast = useToast();
 
   const [type, setType] = useState<IssueDocType>("PRESCRIPTION");
   const [diagnosis, setDiagnosis] = useState("");
@@ -147,11 +149,10 @@ export default function Prescribe() {
             };
 
       await issueDocument(String(id), type, content);
-      Alert.alert("발급 완료", "문서가 발급되었습니다. 환자가 서류함에서 확인·다운로드할 수 있어요.", [
-        { text: "확인", onPress: () => router.back() },
-      ]);
+      toast.show("문서가 발급되었어요. 환자가 서류함에서 확인할 수 있습니다.");
+      router.back();
     } catch (e) {
-      Alert.alert("발급 실패", e instanceof Error ? e.message : "잠시 후 다시 시도해 주세요.");
+      toast.show(e instanceof Error ? e.message : "발급에 실패했어요. 잠시 후 다시 시도해 주세요.", "error");
     } finally {
       setLoading(false);
     }

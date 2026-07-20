@@ -15,7 +15,7 @@ import { Header } from "@/components/Header";
 import { Text } from "@/components/Text";
 import { useTheme } from "@/theme/theme";
 import { palette } from "@/theme/tokens";
-import { doctors } from "@/lib/mock";
+import { useAppointment } from "@/lib/useAppointment";
 import { DEMO_MODE } from "@/lib/config";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -35,11 +35,12 @@ export default function Chat() {
   const insets = useSafeAreaInsets();
   const scroll = useRef<ScrollView>(null);
   const { user } = useAuth();
-  const doctor = doctors.find((d) => d.id === id) ?? doctors[0];
+  const appt = useAppointment(id);
+  const doctorName = appt?.doctorName ?? "담당 의료진";
 
   const [messages, setMessages] = useState<Msg[]>(
     DEMO_MODE
-      ? [{ id: "m0", me: false, text: `안녕하세요, ${doctor.name}입니다. 어떤 점이 불편하신가요?` }]
+      ? [{ id: "m0", me: false, text: `안녕하세요, ${doctorName}입니다. 어떤 점이 불편하신가요?` }]
       : [],
   );
   const [input, setInput] = useState("");
@@ -111,7 +112,7 @@ export default function Chat() {
       style={{ flex: 1, backgroundColor: colors.canvas }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <Header title={`${doctor.name} 의료진`} />
+      <Header title={doctorName} />
       <ScrollView
         ref={scroll}
         style={{ flex: 1 }}

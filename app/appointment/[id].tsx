@@ -10,7 +10,8 @@ import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
 import { useTheme } from "@/theme/theme";
 import { palette } from "@/theme/tokens";
-import { appointments, statusLabel } from "@/lib/mock";
+import { statusLabel, type AppointmentStatus } from "@/lib/mock";
+import { useAppointment } from "@/lib/useAppointment";
 import { useAuth } from "@/context/AuthContext";
 
 export default function AppointmentDetail() {
@@ -19,8 +20,8 @@ export default function AppointmentDetail() {
   const router = useRouter();
   const { user } = useAuth();
   const isDoctor = user?.role === "DOCTOR";
-  const appt = appointments.find((a) => a.id === id) ?? appointments[0];
-  const active = appt.status !== "COMPLETED";
+  const appt = useAppointment(id);
+  const active = appt?.status !== "COMPLETED";
 
   const cancel = () =>
     Alert.alert("예약 취소", "이 예약을 취소할까요?", [
@@ -37,18 +38,18 @@ export default function AppointmentDetail() {
       <Header title="예약 상세" />
       <Screen>
         <Card style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
-          <Avatar name={appt.doctor} size={56} />
+          <Avatar name={appt?.doctorName ?? "의료진"} size={56} />
           <View style={{ flex: 1 }}>
-            <Text variant="bodyStrong">{appt.doctor} 의료진</Text>
+            <Text variant="bodyStrong">{appt?.doctorName ?? "담당 의료진"}</Text>
             <Text variant="small" color="muted">
-              {appt.specialty}
+              {appt?.specialty || appt?.organizationName || "비대면 진료"}
             </Text>
           </View>
-          <Badge tone={active ? "brand" : "neutral"} label={statusLabel[appt.status]} />
+          <Badge tone={active ? "brand" : "neutral"} label={statusLabel[(appt?.status ?? "SCHEDULED") as AppointmentStatus] ?? "예약됨"} />
         </Card>
 
         <Card style={{ marginTop: spacing.x4, gap: spacing.x3 }}>
-          <Row icon="calendar-outline" label="일시" value={appt.when} />
+          <Row icon="calendar-outline" label="일시" value={appt?.when ?? "-"} />
           <Divider />
           <Row icon="videocam-outline" label="진료 방식" value="비대면(화상)" />
           <Divider />
@@ -60,21 +61,21 @@ export default function AppointmentDetail() {
             <Button
               label={isDoctor ? "진료 시작" : "진료실 입장"}
               full
-              onPress={() => router.push(isDoctor ? "/consult/1" : `/waiting/${appt.id}`)}
+              onPress={() => router.push(isDoctor ? "/consult/1" : `/waiting/${id}`)}
             />
             <View style={{ flexDirection: "row", gap: 8 }}>
               <Button
                 label="채팅 상담"
                 variant="secondary"
                 style={{ flex: 1 }}
-                onPress={() => router.push(`/chat/${appt.id}`)}
+                onPress={() => router.push(`/chat/${id}`)}
               />
               <Button
                 label="일정 변경"
                 variant="secondary"
                 style={{ flex: 1 }}
                 // 변경 = 담당의의 예약 가능 시간에서 새 슬롯 선택(예약 플로우 재사용)
-                onPress={() => router.push(`/doctor/${appt.id}?reschedule=1`)}
+                onPress={() => router.push(`/doctor/${id}?reschedule=1`)}
               />
             </View>
             {isDoctor ? (
@@ -82,7 +83,7 @@ export default function AppointmentDetail() {
                 label="문서 발급 (처방전·진료내역서)"
                 variant="secondary"
                 full
-                onPress={() => router.push(`/prescribe/${appt.id}`)}
+                onPress={() => router.push(`/prescribe/${id}`)}
               />
             ) : null}
             <Button label="예약 취소" variant="ghost" full onPress={cancel} />
@@ -93,7 +94,7 @@ export default function AppointmentDetail() {
               <Button
                 label="문서 발급 (처방전·진료내역서)"
                 full
-                onPress={() => router.push(`/prescribe/${appt.id}`)}
+                onPress={() => router.push(`/prescribe/${id}`)}
               />
             ) : null}
             <Button
@@ -107,7 +108,7 @@ export default function AppointmentDetail() {
                 label="진료 후기 남기기"
                 variant="secondary"
                 full
-                onPress={() => router.push(`/review/${appt.id}`)}
+                onPress={() => router.push(`/review/${id}`)}
               />
             ) : null}
             <Button

@@ -88,7 +88,7 @@ export async function getDoctorQueue(): Promise<DoctorQueueItem[]> {
 function toView(a: AppointmentDto): AppointmentView {
   return {
     id: String(a.id),
-    doctorLabel: `의료진 #${a.doctorId}`,
+    doctorLabel: a.doctorName ?? `의료진 #${a.doctorId}`,
     when: a.scheduledAt
       ? new Date(a.scheduledAt).toLocaleString("ko-KR", {
           month: "long",
