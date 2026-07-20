@@ -84,7 +84,12 @@ export default function Appointments() {
                   style={{ flex: 1 }}
                   onPress={() => router.push(`/waiting/${a.id}`)}
                 />
-                <Button label="변경" variant="secondary" style={{ flex: 1 }} />
+                <Button
+                  label="변경"
+                  variant="secondary"
+                  style={{ flex: 1 }}
+                  onPress={() => router.push(`/reschedule/${a.id}`)}
+                />
               </View>
             </Card>
             </Pressable>
