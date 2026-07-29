@@ -12,11 +12,14 @@ export function ErrorScreen({
   message = "잠시 후 다시 시도해 주세요. 계속되면 고객센터로 문의해 주세요.",
   retryLabel = "다시 시도",
   onRetry,
+  hint,
 }: {
   title?: string;
   message?: string;
   retryLabel?: string;
   onRetry?: () => void;
+  /** 예: "마지막 동기화: 3분 전" — 실패와 빈 상태를 구분해 주는 보조 정보. */
+  hint?: string;
 }) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -39,6 +42,11 @@ export function ErrorScreen({
       </Text>
       {onRetry ? (
         <Button label={retryLabel} onPress={onRetry} style={{ marginTop: 28 }} />
+      ) : null}
+      {hint ? (
+        <Text variant="caption" color="subtle" center style={{ marginTop: 14 }}>
+          {hint}
+        </Text>
       ) : null}
     </View>
   );
