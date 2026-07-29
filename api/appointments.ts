@@ -113,18 +113,10 @@ export async function listMyAppointments(): Promise<AppointmentView[]> {
       status: a.status,
     }));
   }
-  try {
-    const list = await api<AppointmentDto[]>("/api/appointments");
-    return list.map(toView);
-  } catch {
-    // 네트워크/서버 문제 시 목으로 폴백
-    return mockAppointments.map((a) => ({
-      id: a.id,
-      doctorLabel: `${a.doctor} · ${a.specialty}`,
-      when: a.when,
-      status: a.status,
-    }));
-  }
+  // 실서버 모드에서는 오류를 삼키지 않는다. 실패를 빈/목 데이터로 위장하면
+  // 사용자가 서버 장애와 진짜 빈 상태를 구분할 수 없다(useAsync 가 error 상태로 처리).
+  const list = await api<AppointmentDto[]>("/api/appointments");
+  return list.map(toView);
 }
 
 /** 예약 취소. 진행 중/완료된 진료는 서버가 거부한다. */

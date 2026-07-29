@@ -37,16 +37,13 @@ export async function listDoctors(specialty?: string): Promise<Doctor[]> {
       ? all.filter((d) => d.specialty === specialty)
       : all;
   }
-  try {
-    const q =
-      specialty && specialty !== "전체"
-        ? `?specialty=${encodeURIComponent(specialty)}`
-        : "";
-    const list = await api<PublicDoctor[]>(`/api/doctors${q}`);
-    return list.map(toDoctor);
-  } catch {
-    return mockDoctors; // 서버 문제 시 폴백
-  }
+  // 실서버 모드: 오류를 목으로 위장하지 않고 그대로 전파(useAsync 가 error 상태 처리).
+  const q =
+    specialty && specialty !== "전체"
+      ? `?specialty=${encodeURIComponent(specialty)}`
+      : "";
+  const list = await api<PublicDoctor[]>(`/api/doctors${q}`);
+  return list.map(toDoctor);
 }
 
 export async function getDoctor(id: string): Promise<Doctor | null> {

@@ -40,11 +40,23 @@ export async function registerPushToken(token: string, platform: string): Promis
 
 export async function listNotifications(): Promise<Notification[]> {
   if (DEMO_MODE) return mockNotifications;
+  // 실서버 모드: 오류 전파(호출부의 useAsync 가 error 상태 처리).
+  const list = await api<NotificationDto[]>("/api/notifications");
+  return list.map(toView);
+}
+
+/**
+ * 읽지 않은 알림 개수. 홈 배지에 사용한다.
+ * 별도 count 엔드포인트가 없어 목록에서 파생하되, 실패는 조용히 0 으로 둔다
+ * (배지는 부가 정보이므로 홈 전체를 error 로 만들지 않는다).
+ */
+export async function unreadCount(): Promise<number> {
+  if (DEMO_MODE) return mockNotifications.filter((n) => !n.read).length;
   try {
     const list = await api<NotificationDto[]>("/api/notifications");
-    return list.map(toView);
+    return list.map(toView).filter((n) => !n.read).length;
   } catch {
-    return mockNotifications;
+    return 0;
   }
 }
 
