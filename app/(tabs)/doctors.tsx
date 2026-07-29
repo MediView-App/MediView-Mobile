@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { View, TextInput, Pressable, StyleSheet, ScrollView } from "react-native";
 import { SkeletonList } from "@/components/Skeleton";
 import { Link } from "expo-router";
@@ -7,10 +7,11 @@ import { Screen } from "@/components/Screen";
 import { Text } from "@/components/Text";
 import { Card } from "@/components/Card";
 import { Avatar } from "@/components/Avatar";
+import { Button } from "@/components/Button";
 import { useTheme } from "@/theme/theme";
 import { palette } from "@/theme/tokens";
-import { type Doctor } from "@/lib/mock";
 import { listDoctors } from "@/api/doctors";
+import { useAsync, formatSyncedAt } from "@/lib/useAsync";
 
 const specialties = ["전체", "내과", "피부과", "정신건강의학과", "소아청소년과"];
 
@@ -36,20 +37,11 @@ export default function Doctors() {
   const [q, setQ] = useState("");
   const [spec, setSpec] = useState("전체");
   const [sort, setSort] = useState<SortKey>("recommended");
-  const [items, setItems] = useState<Doctor[] | null>(null);
-
-  useEffect(() => {
-    let alive = true;
-    listDoctors()
-      .then((list) => alive && setItems(list))
-      .catch(() => alive && setItems([]));
-    return () => {
-      alive = false;
-    };
-  }, []);
+  const fetcher = useCallback(() => listDoctors(), []);
+  const { state, data, error, lastSyncedAt, reload } = useAsync(fetcher);
 
   const filtered = useMemo(() => {
-    const list = (items ?? []).filter(
+    const list = (data ?? []).filter(
       (d) =>
         (spec === "전체" || d.specialty === spec) &&
         (q === "" || d.name.includes(q) || d.org.includes(q)),
@@ -70,7 +62,7 @@ export default function Doctors() {
       );
     }
     return sorted;
-  }, [items, q, spec, sort]);
+  }, [data, q, spec, sort]);
 
   return (
     <Screen title="의료진 찾기" subtitle="면허 검증을 통과한 의료진만 만납니다">
@@ -124,7 +116,7 @@ export default function Doctors() {
       </ScrollView>
 
       {/* 정렬 + 결과 수 */}
-      {items !== null ? (
+      {state === "success" ? (
         <View style={[styles.rowBetween, { marginBottom: spacing.x3 }]}>
           <Text variant="small" color="muted">
             {filtered.length}명
@@ -158,8 +150,22 @@ export default function Doctors() {
         </View>
       ) : null}
 
-      {/* 목록 */}
-      {items === null ? <SkeletonList count={4} /> : null}
+      {/* 목록 — loading/error/empty/success 분리. 검색·필터 UI 는 유지해 맥락 안에서 재시도. */}
+      {state === "loading" ? <SkeletonList count={4} /> : null}
+      {state === "error" ? (
+        <Card style={{ alignItems: "center", paddingVertical: 32, gap: 10 }}>
+          <Ionicons name="cloud-offline-outline" size={30} color={colors.subtle} />
+          <Text variant="body" color="muted" center>
+            {error ?? "의료진 목록을 불러오지 못했어요."}
+          </Text>
+          {formatSyncedAt(lastSyncedAt) ? (
+            <Text variant="caption" color="subtle">
+              {formatSyncedAt(lastSyncedAt)}
+            </Text>
+          ) : null}
+          <Button label="다시 시도" variant="secondary" onPress={reload} style={{ marginTop: 4 }} />
+        </Card>
+      ) : null}
       <View style={{ gap: spacing.x3 }}>
         {filtered.map((d) => (
           <Link key={d.id} href={`/doctor/${d.id}`} asChild>
@@ -200,7 +206,7 @@ export default function Doctors() {
             </Pressable>
           </Link>
         ))}
-        {items !== null && filtered.length === 0 ? (
+        {state === "success" && filtered.length === 0 ? (
           <Text variant="body" color="muted" center style={{ paddingVertical: 40 }}>
             조건에 맞는 의료진이 없어요.
           </Text>

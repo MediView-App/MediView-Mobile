@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { View, Pressable, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Screen } from "@/components/Screen";
 import { SkeletonList } from "@/components/Skeleton";
+import { ErrorScreen } from "@/components/ErrorScreen";
 import { Text } from "@/components/Text";
 import { Card } from "@/components/Card";
 import { Badge, type Tone } from "@/components/Badge";
@@ -11,7 +12,8 @@ import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
 import { useTheme } from "@/theme/theme";
 import { statusLabel, type AppointmentStatus } from "@/lib/mock";
-import { listMyAppointments, type AppointmentView } from "@/api/appointments";
+import { listMyAppointments } from "@/api/appointments";
+import { useAsync, formatSyncedAt } from "@/lib/useAsync";
 
 const toneByStatus: Record<string, Tone> = {
   SCHEDULED: "brand",
@@ -25,21 +27,11 @@ const toneByStatus: Record<string, Tone> = {
 export default function Appointments() {
   const { spacing, colors } = useTheme();
   const router = useRouter();
-  const [items, setItems] = useState<AppointmentView[] | null>(null);
+  const fetcher = useCallback(() => listMyAppointments(), []);
+  const { state, data, error, lastSyncedAt, reload } = useAsync(fetcher);
 
-  const load = useCallback(async () => {
-    try {
-      setItems(await listMyAppointments());
-    } catch {
-      setItems([]);
-    }
-  }, []);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  if (items === null) {
+  // 로딩: 콘텐츠와 같은 형태의 스켈레톤(스피너 지양)
+  if (state === "loading") {
     return (
       <Screen title="예약">
         <Text variant="h3" style={{ marginBottom: spacing.x3 }}>
@@ -50,11 +42,24 @@ export default function Appointments() {
     );
   }
 
+  // 오류: 빈 상태로 위장하지 않고 재시도 + 마지막 동기화 시각 제공
+  if (state === "error") {
+    return (
+      <ErrorScreen
+        title="예약을 불러오지 못했어요"
+        message={error ?? "잠시 후 다시 시도해 주세요."}
+        onRetry={reload}
+        hint={formatSyncedAt(lastSyncedAt)}
+      />
+    );
+  }
+
+  const items = data ?? [];
   const upcoming = items.filter((a) => a.status !== "COMPLETED");
   const past = items.filter((a) => a.status === "COMPLETED");
 
   return (
-    <Screen title="예약" onRefresh={load}>
+    <Screen title="예약" onRefresh={reload}>
       <Text variant="h3" style={{ marginBottom: spacing.x3 }}>
         예정된 진료
       </Text>
