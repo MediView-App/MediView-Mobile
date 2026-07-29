@@ -24,12 +24,13 @@ export default function Home() {
   const router = useRouter();
   const { user } = useAuth();
 
-  // 홈 데이터: 예약·의료진을 병렬로 가져와 '다음 예약'과 '추천 의료진'을 파생한다.
+  // 홈 데이터: 예약·의료진을 병렬로 가져와 '진행 중 진료', '다음 예약', '추천 의료진'을 파생.
+  // 아픈 사용자에게는 추천보다 '지금 해야 할 행동'이 먼저다(상태 중심 홈).
   const fetchHome = useCallback(async () => {
     const [appts, docs] = await Promise.all([listMyAppointments(), listDoctors()]);
-    const next =
-      appts.find((a) => a.status === "SCHEDULED" || a.status === "WAITING") ?? null;
-    return { next, doctors: docs.slice(0, 2) };
+    const active = appts.find((a) => a.status === "WAITING" || a.status === "IN_PROGRESS") ?? null;
+    const next = appts.find((a) => a.status === "SCHEDULED") ?? null;
+    return { active, next, doctors: docs.slice(0, 2) };
   }, []);
   const { state, data, error, reload } = useAsync(fetchHome);
 
@@ -50,6 +51,7 @@ export default function Home() {
     return <DoctorHome />;
   }
 
+  const active = data?.active ?? null;
   const next = data?.next ?? null;
   const recommended = data?.doctors ?? [];
 
@@ -83,29 +85,7 @@ export default function Home() {
         </Pressable>
       </View>
 
-      {/* 지금 진료받기 CTA */}
-      <Pressable onPress={() => router.push("/doctors")} style={{ marginTop: spacing.x6 }}>
-        <View
-          style={[
-            styles.hero,
-            { backgroundColor: palette.primary[700], borderRadius: radius.xl },
-          ]}
-        >
-          <View style={{ flex: 1, gap: 6 }}>
-            <Text variant="h3" style={{ color: "#fff" }}>
-              지금 바로 진료 받기
-            </Text>
-            <Text variant="small" style={{ color: "rgba(255,255,255,0.8)" }}>
-              평균 3분 이내 연결 · 검증된 의료진
-            </Text>
-          </View>
-          <View style={styles.heroBtn}>
-            <Ionicons name="arrow-forward" size={22} color={palette.primary[700]} />
-          </View>
-        </View>
-      </Pressable>
-
-      {/* 홈 데이터: 로딩/오류/성공 분리. 히어로 CTA 는 항상 동작하므로 데이터 실패로 막지 않는다. */}
+      {/* 홈 데이터: 로딩/오류/성공 분리. 아픈 사용자에게 '지금 할 일'을 먼저 보인다. */}
       {state === "loading" ? (
         <View style={{ marginTop: spacing.x6 }}>
           <SkeletonList count={2} />
@@ -122,10 +102,42 @@ export default function Home() {
         </Card>
       ) : null}
 
-      {/* 다가오는 예약 */}
+      {/* 1) 진행 중/대기 — 지금 해야 할 행동을 최상단에 */}
+      {state === "success" && active ? (
+        <Pressable
+          onPress={() =>
+            router.push(active.status === "IN_PROGRESS" ? `/consult/${active.id}` : `/waiting/${active.id}`)
+          }
+          style={{ marginTop: spacing.x6 }}
+          accessibilityRole="button"
+          accessibilityLabel={`${active.status === "IN_PROGRESS" ? "진행 중인 진료" : "대기 중인 진료"}, ${active.doctorLabel}, 입장`}
+        >
+          <View style={[styles.hero, { backgroundColor: palette.primary[700], borderRadius: radius.xl }]}>
+            <View style={{ flex: 1, gap: 6 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <View style={styles.liveDot} />
+                <Text variant="small" style={{ color: "rgba(255,255,255,0.85)" }}>
+                  {active.status === "IN_PROGRESS" ? "진료 진행 중" : "대기 중"}
+                </Text>
+              </View>
+              <Text variant="h3" style={{ color: "#fff" }}>
+                {active.doctorLabel}
+              </Text>
+              <Text variant="small" style={{ color: "rgba(255,255,255,0.8)" }}>
+                {active.status === "IN_PROGRESS" ? "진료실로 입장하세요" : "곧 연결됩니다 · 입장 준비"}
+              </Text>
+            </View>
+            <View style={styles.heroBtn}>
+              <Ionicons name="arrow-forward" size={22} color={palette.primary[700]} />
+            </View>
+          </View>
+        </Pressable>
+      ) : null}
+
+      {/* 2) 다음 예약과 준비할 일 */}
       {state === "success" && next ? (
         <View style={{ marginTop: spacing.x6, gap: spacing.x3 }}>
-          <Text variant="h3">다가오는 예약</Text>
+          <Text variant="h3">다음 예약</Text>
           <Card>
             <View style={styles.rowBetween}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
@@ -140,14 +152,57 @@ export default function Home() {
               <Badge tone="brand" label={statusLabel[next.status as AppointmentStatus] ?? next.status} />
             </View>
             <Button
-              label="진료실 입장"
+              label="진료 준비하기"
               full
               style={{ marginTop: spacing.x4 }}
-              onPress={() => router.push(`/waiting/${next.id}`)}
+              onPress={() => router.push(`/appointment/${next.id}`)}
             />
           </Card>
         </View>
       ) : null}
+
+      {/* 3) 새 진료 시작 — 진행 중/다음 예약이 있으면 보조로 낮춰 배치 */}
+      {active || next ? (
+        <Pressable
+          onPress={() => router.push("/doctors")}
+          style={{ marginTop: spacing.x6 }}
+          accessibilityRole="button"
+          accessibilityLabel="새 진료 시작하기"
+        >
+          <Card>
+            <View style={styles.rowBetween}>
+              <View style={{ flex: 1, gap: 4 }}>
+                <Text variant="bodyStrong">새 진료 시작하기</Text>
+                <Text variant="small" color="muted">
+                  평균 3분 이내 연결 · 검증된 의료진
+                </Text>
+              </View>
+              <Ionicons name="arrow-forward" size={20} color={colors.brand} />
+            </View>
+          </Card>
+        </Pressable>
+      ) : (
+        <Pressable
+          onPress={() => router.push("/doctors")}
+          style={{ marginTop: spacing.x6 }}
+          accessibilityRole="button"
+          accessibilityLabel="지금 바로 진료 받기"
+        >
+          <View style={[styles.hero, { backgroundColor: palette.primary[700], borderRadius: radius.xl }]}>
+            <View style={{ flex: 1, gap: 6 }}>
+              <Text variant="h3" style={{ color: "#fff" }}>
+                지금 바로 진료 받기
+              </Text>
+              <Text variant="small" style={{ color: "rgba(255,255,255,0.8)" }}>
+                평균 3분 이내 연결 · 검증된 의료진
+              </Text>
+            </View>
+            <View style={styles.heroBtn}>
+              <Ionicons name="arrow-forward" size={22} color={palette.primary[700]} />
+            </View>
+          </View>
+        </Pressable>
+      )}
 
       {/* 추천 의료진 */}
       {state === "success" && recommended.length ? (
@@ -217,6 +272,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   bell: { padding: 4 },
+  liveDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: "#3BD07A" },
   badge: {
     position: "absolute",
     top: 0,
