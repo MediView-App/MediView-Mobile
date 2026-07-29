@@ -16,10 +16,13 @@ export type {
 
 export const WEBRTC_AVAILABLE = false;
 
-export function startConsult(_opts: StartConsultOpts): ConsultHandle {
+export function startConsult(opts: StartConsultOpts): ConsultHandle {
+  // 네이티브 모듈이 없는 환경 — 미지원 상태를 알려 화면이 폴백 안내를 띄우게 한다.
+  opts.onStatus?.("unavailable");
   return {
     toggleMic: () => false,
     toggleCam: () => false,
+    restart: () => {},
     hangup: () => {},
   };
 }
