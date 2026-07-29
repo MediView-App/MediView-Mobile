@@ -9,6 +9,7 @@ import { ErrorScreen } from "@/components/ErrorScreen";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { ToastProvider } from "@/components/Toast";
 import { OfflineBanner } from "@/components/OfflineBanner";
+import { DemoBanner } from "@/components/DemoBanner";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -36,6 +37,7 @@ export default function RootLayout() {
       <AuthProvider>
         <ToastProvider>
           <RootNavigator />
+          <DemoBanner />
           <OfflineBanner />
         </ToastProvider>
       </AuthProvider>
