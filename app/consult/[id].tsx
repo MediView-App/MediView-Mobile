@@ -35,6 +35,7 @@ export default function Consult() {
         sessionId={String(id)}
         doctorName={doctorName}
         onEnd={() => router.replace(`/summary/${id}`)}
+        onChat={() => router.replace(`/chat/${id}`)}
       />
     );
   }
