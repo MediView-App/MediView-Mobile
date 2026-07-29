@@ -1,6 +1,13 @@
 import Constants from "expo-constants";
 
-type Extra = { apiUrl?: string; demoMode?: boolean };
+type Extra = {
+  apiUrl?: string;
+  demoMode?: boolean;
+  stunUrls?: string;
+  turnUrl?: string;
+  turnUsername?: string;
+  turnCredential?: string;
+};
 
 const extra = (Constants.expoConfig?.extra ?? {}) as Extra;
 
@@ -29,3 +36,44 @@ export const DEMO_MODE = __DEV__ && demoRequested;
 
 /** WebSocket 기본 URL (http→ws, https→wss). */
 export const WS_URL = API_URL.replace(/^http/, "ws");
+
+/**
+ * WebRTC ICE 서버 목록.
+ *
+ * STUN 만으로는 대칭형 NAT/모바일 캐리어망에서 P2P 가 실패한다. 인프라의 coturn
+ * TURN 서버를 함께 지정하면 릴레이로 폴백해 연결 성공률이 크게 오른다.
+ * 설정: EXPO_PUBLIC_TURN_URL / _TURN_USERNAME / _TURN_CREDENTIAL 또는 app.json extra.
+ */
+export type IceServer = { urls: string; username?: string; credential?: string };
+
+const STUN_URLS =
+  process.env.EXPO_PUBLIC_STUN_URLS || extra.stunUrls || "stun:stun.l.google.com:19302";
+
+const TURN_URL = process.env.EXPO_PUBLIC_TURN_URL || extra.turnUrl || "";
+const TURN_USERNAME = process.env.EXPO_PUBLIC_TURN_USERNAME || extra.turnUsername || "";
+const TURN_CREDENTIAL =
+  process.env.EXPO_PUBLIC_TURN_CREDENTIAL || extra.turnCredential || "";
+
+function buildIceServers(): IceServer[] {
+  const servers: IceServer[] = String(STUN_URLS)
+    .split(",")
+    .map((s: string) => s.trim())
+    .filter((s: string) => s.length > 0)
+    .map((urls: string) => ({ urls }));
+
+  if (TURN_URL) {
+    String(TURN_URL)
+      .split(",")
+      .map((s: string) => s.trim())
+      .filter((s: string) => s.length > 0)
+      .forEach((urls: string) => {
+        servers.push({ urls, username: TURN_USERNAME, credential: TURN_CREDENTIAL });
+      });
+  }
+  return servers;
+}
+
+export const ICE_SERVERS: IceServer[] = buildIceServers();
+
+/** TURN 서버가 설정되어 있는지(연결 실패 시 진단·안내에 사용). */
+export const HAS_TURN = TURN_URL.length > 0;
