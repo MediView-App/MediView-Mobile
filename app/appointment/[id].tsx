@@ -104,6 +104,7 @@ export default function AppointmentDetail() {
             ) : null}
             <Button
               label={cancelling ? "취소 중…" : "예약 취소"}
+              loading={cancelling}
               variant="ghost"
               full
               disabled={cancelling}

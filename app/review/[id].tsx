@@ -98,6 +98,7 @@ export default function Review() {
 
         <Button
           label={submitting ? "등록 중…" : "후기 등록"}
+          loading={submitting}
           full
           onPress={submit}
           style={{ marginTop: spacing.x6 }}

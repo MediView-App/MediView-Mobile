@@ -195,6 +195,7 @@ export default function DocumentDetail() {
               </Text>
               <Button
                 label={busy ? "처리 중…" : reminders > 0 ? "복약 알림 끄기" : "복약 알림 켜기"}
+                loading={busy}
                 variant={reminders > 0 ? "secondary" : "primary"}
                 full
                 disabled={busy}
@@ -242,6 +243,7 @@ export default function DocumentDetail() {
         />
         <Button
           label={saving ? "저장 중…" : "PDF 저장"}
+          loading={saving}
           style={{ flex: 1 }}
           onPress={onSave}
         />

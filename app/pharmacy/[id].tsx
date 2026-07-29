@@ -222,6 +222,7 @@ export default function PharmacySend() {
         {step === "method" && (
           <Button
             label={sending ? "전송 중…" : "처방전 전송"}
+            loading={sending}
             full
             disabled={method === "delivery" && !address.trim()}
             onPress={send}

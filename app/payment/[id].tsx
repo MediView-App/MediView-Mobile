@@ -188,7 +188,7 @@ export default function Payment() {
             {error}
           </Text>
         ) : null}
-        <Button label={paying ? "결제 중…" : "12,000원 결제하기"} full onPress={pay} />
+        <Button label={paying ? "결제 중…" : "12,000원 결제하기"} loading={paying} full onPress={pay} />
       </View>
     </View>
   );

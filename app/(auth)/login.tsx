@@ -76,6 +76,7 @@ export default function Login() {
 
         <Button
           label={loading ? "로그인 중…" : "로그인"}
+          loading={loading}
           full
           onPress={submit}
           style={{ marginTop: spacing.x6 }}

@@ -319,7 +319,7 @@ export default function Prescribe() {
           </>
         )}
 
-        <Button label={loading ? "발급 중…" : "발급하기"} full onPress={submit} style={{ marginTop: spacing.x2 }} />
+        <Button label={loading ? "발급 중…" : "발급하기"} loading={loading} full onPress={submit} style={{ marginTop: spacing.x2 }} />
       </ScrollView>
     </KeyboardAvoidingView>
   );

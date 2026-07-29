@@ -138,6 +138,7 @@ export default function Signup() {
 
         <Button
           label={loading ? "가입 중…" : "다음: 본인확인"}
+          loading={loading}
           full
           onPress={submit}
           style={{ marginTop: spacing.x5 }}

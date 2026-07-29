@@ -106,6 +106,7 @@ export default function Reschedule() {
 
         <Button
           label={saving ? "변경 중…" : picked === null ? "시간을 선택하세요" : "이 시간으로 변경"}
+          loading={saving}
           full
           disabled={picked === null || saving}
           onPress={submit}

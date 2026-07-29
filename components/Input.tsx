@@ -46,14 +46,20 @@ export function Input({ label, icon, secure, error, style, ...rest }: InputProps
           style={[{ flex: 1, color: colors.content, fontSize: 16, paddingVertical: 14 }, style]}
           placeholderTextColor={colors.subtle}
           secureTextEntry={hidden}
-          accessibilityLabel={label}
+          // 오류가 있으면 스크린리더가 필드와 함께 오류를 읽도록 라벨에 포함한다.
+          accessibilityLabel={error ? `${label ?? "입력"}, 오류: ${error}` : label}
           maxFontSizeMultiplier={2}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           {...rest}
         />
         {secure ? (
-          <Pressable onPress={() => setHidden((h) => !h)} hitSlop={8}>
+          <Pressable
+            onPress={() => setHidden((h) => !h)}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={hidden ? "비밀번호 표시" : "비밀번호 숨기기"}
+          >
             <Ionicons
               name={hidden ? "eye-outline" : "eye-off-outline"}
               size={18}
@@ -63,7 +69,13 @@ export function Input({ label, icon, secure, error, style, ...rest }: InputProps
         ) : null}
       </View>
       {error ? (
-        <Text variant="caption" style={{ color: colors.accent }}>
+        // 시각 사용자용 오류. 스크린리더는 위 입력 라벨로 오류를 받으므로 중복 낭독을 막는다.
+        <Text
+          variant="caption"
+          style={{ color: colors.accent }}
+          accessibilityElementsHidden
+          importantForAccessibility="no"
+        >
           {error}
         </Text>
       ) : null}

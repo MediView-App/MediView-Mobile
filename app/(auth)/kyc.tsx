@@ -94,6 +94,7 @@ export default function Kyc() {
             </Text>
             <Button
               label={loading ? "발송 중…" : "인증번호 받기"}
+              loading={loading}
               full
               onPress={sendCode}
               style={{ marginTop: spacing.x6 }}
@@ -124,6 +125,7 @@ export default function Kyc() {
             </Pressable>
             <Button
               label={loading ? "확인 중…" : "확인"}
+              loading={loading}
               full
               onPress={confirm}
               style={{ marginTop: spacing.x6 }}

@@ -57,6 +57,7 @@ export default function ProfileEdit() {
         </View>
         <Button
           label={saving ? "저장 중…" : "저장"}
+          loading={saving}
           full
           onPress={save}
           style={{ marginTop: spacing.x6 }}
