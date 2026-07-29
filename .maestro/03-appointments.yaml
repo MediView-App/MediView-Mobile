@@ -1,0 +1,16 @@
+# 예약 목록 → 상태 확인.
+# 로그인 상태를 전제로 합니다.
+appId: com.mediview.app
+---
+- launchApp
+
+- tapOn: "예약"
+# 로딩(스켈레톤) 후 예약 화면 진입 확인
+- assertVisible:
+    text: "예정된 진료"
+    timeout: 10000
+
+# 예약이 있으면 상세/진료 준비로 진입 가능(없으면 빈 상태 안내)
+- assertVisible:
+    text: "진료 준비하기|진료실 입장|예정된 진료가 없어요"
+    optional: true

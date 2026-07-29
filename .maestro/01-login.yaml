@@ -1,0 +1,27 @@
+# 온보딩 → 로그인 → 홈 진입.
+# 실서버 계정이 필요합니다. EMAIL/PASSWORD 를 실제 계정으로 바꾸거나
+# `-e EMAIL=... -e PASSWORD=...` 로 주입하세요.
+appId: com.mediview.app
+env:
+  EMAIL: "patient@mediview.app"
+  PASSWORD: "change-me"
+---
+- launchApp:
+    clearState: true
+
+# 미인증이면 온보딩이 먼저 뜬다.
+- tapOn:
+    text: "이미 계정이 있어요"
+    optional: true
+
+- assertVisible: "로그인"
+- tapOn: "이메일"
+- inputText: ${EMAIL}
+- tapOn: "비밀번호"
+- inputText: ${PASSWORD}
+- tapOn: "로그인"
+
+# 홈 진입 확인(인사 문구).
+- assertVisible:
+    text: "안녕하세요"
+    timeout: 10000

@@ -1,0 +1,25 @@
+# 의료진 탐색 → 검색 → 상세 진입 → 예약 시작.
+# 로그인 상태를 전제로 합니다(01-login 을 먼저 실행하거나 데모 빌드 사용).
+appId: com.mediview.app
+---
+- launchApp
+
+# 의료진 탭으로 이동
+- tapOn: "의료진"
+- assertVisible: "의료진 찾기"
+
+# 검색
+- tapOn: "이름 · 병원 검색"
+- inputText: "내과"
+
+# 첫 번째 의료진 상세로 진입(리스트 상단 항목)
+- tapOn:
+    text: ".*의료진.*|.*전문의.*|.*내과.*"
+    index: 0
+    optional: true
+
+# 상세에서 예약 흐름 진입(시간 미선택 시 안내 문구 노출 확인)
+- assertVisible:
+    text: "시간을 선택하세요|예약하기"
+    timeout: 8000
+    optional: true

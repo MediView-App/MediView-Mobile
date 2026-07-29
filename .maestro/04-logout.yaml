@@ -1,0 +1,23 @@
+# 마이 → 로그아웃 → 로그인/온보딩으로 복귀.
+# 로그인 상태를 전제로 합니다.
+appId: com.mediview.app
+---
+- launchApp
+
+- tapOn: "마이"
+- scrollUntilVisible:
+    element:
+      text: "로그아웃"
+    direction: DOWN
+    timeout: 8000
+- tapOn: "로그아웃"
+
+# 로그아웃 확인 다이얼로그가 있으면 확정
+- tapOn:
+    text: "로그아웃|확인"
+    optional: true
+
+# 미인증 화면(온보딩/로그인)으로 복귀 확인
+- assertVisible:
+    text: "시작하기|이미 계정이 있어요|로그인"
+    timeout: 8000
